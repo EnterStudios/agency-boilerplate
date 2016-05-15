@@ -71,6 +71,9 @@
                         "<%= root %>/src/tmpl/partials"
                       ],
                       "debug": false
+                  },
+                  "agency" : {
+                    "customs" : ["agency-environment/lib/handlebars/customs/yamlExclude"]
                   } },
                   {"test": ".css$", "loader": "style-loader!css-loader"},
                   {"test": ".(png|jpg|gif|svg|ttf|woff|eot)$", "loader": "url-loader?limit=100000"},
