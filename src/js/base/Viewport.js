@@ -62,7 +62,9 @@ var Viewport = function(frameNode, contentNode) {
     global.addEventListener('resize', global.animationFrame.throttle(onMeasure.bind(this), onResize.bind(this)), false);
     this.frameNode.addEventListener('scroll', global.animationFrame.throttle(onMeasure.bind(this), onScroll.bind(this)), false);
 
-    global.picture.ready(onImageLoad.bind(this));
+    global.animationFrame.addOnce(function (){
+        global.picture.ready(onImageLoad.bind(this));
+    }.bind(this));
 };
 
 Viewport.prototype.EVENT_TYPES = new Enum(['RESIZE', 'SCROLL', 'INIT', 'MEASURE']);

@@ -9,7 +9,7 @@ if (!global.HTMLPictureElement) {
     document.createElement('source');
 }
 
-global.addEventListener('resize', function () {
+global.addEventListener('resize', function() {
     render(document.getElementsByTagName('picture'));
 }, false);
 
@@ -23,12 +23,12 @@ var init = {
 };
 
 module.exports = global.picture = {
-    parse: function (node) {
-        if(!node) {
+    parse: function(node) {
+        if (!node) {
             node = document.body;
         }
         node = getNativeNode(node);
-        if(node.tagName.toLowerCase() === 'picture') {
+        if (node.tagName.toLowerCase() === 'picture') {
             registerObserver(node.querySelectorAll('img'));
             render([node]);
         } else {
@@ -45,7 +45,7 @@ module.exports = global.picture = {
     },
 
     ready: function(cb) {
-        if(init.ready) {
+        if (init.ready) {
             cb();
         } else {
             init.callbacks.push(cb);
@@ -53,14 +53,14 @@ module.exports = global.picture = {
     }
 };
 
-document.addEventListener( "DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function() {
 
     var nodes = [].map.call(document.querySelectorAll('picture > img'), function(image) {
         return image.promise;
     });
     Promise.all(nodes).then(function() {
         init.ready = true;
-        while(init.callbacks.length > 0) {
+        while (init.callbacks.length > 0) {
             (init.callbacks.shift())();
         }
     });
@@ -80,17 +80,27 @@ function registerObserver(images) {
         }
         image.promise = new Promise(function(resolve, reject) {
             var tmpl = image.parentNode.querySelector('template');
-            if(tmpl) {
+            if (tmpl) {
                 var svgImage = createSVG(tmpl, image);
-                image.onload = function(e) {
-                    // svgImage.addEventListener('load', function() {
-                    //
-                    // }, false);
-                    updateSVG(svgImage, e.target);
+                if (image.complete) {
+                    updateSVG(svgImage, image);
                     resolve(true);
-                };
+                } else {
+                    image.onload = function(e) {
+                        // svgImage.addEventListener('load', function() {
+                        //
+                        // }, false);
+                        updateSVG(svgImage, e.target);
+                        resolve(true);
+                    };
+                }
+
             } else {
-                image.onload = resolve;
+                if (image.complete) {
+                    resolve(true);
+                } else {
+                    image.onload = resolve;
+                }
             }
             image.onerror = reject;
         });
@@ -115,15 +125,15 @@ function updateSVG(svgImage, image) {
 }
 
 function render(pictures) {
-    if(validBrowser) {
+    if (validBrowser) {
         if (!global.HTMLPictureElement) {
             var screenSize = getScreenSize();
         }
         pictures = Array.prototype.slice.call(pictures);
-        pictures.forEach(function (picture) {
+        pictures.forEach(function(picture) {
             if (!global.HTMLPictureElement) {
                 if (!picture.modified) {
-                    if(isIE9) {
+                    if (isIE9) {
                         removeIE9VideoShim(picture);
                     }
                     picture.modified = true;
@@ -135,10 +145,11 @@ function render(pictures) {
 }
 
 var size = null;
+
 function getScreenSize() {
-    if(!size) {
+    if (!size) {
         size = document.body.currentStyle || global.getComputedStyle(document.body, ':after');
-        if(!size.getPropertyValue('content')) {
+        if (!size.getPropertyValue('content')) {
             size = global.getComputedStyle(document.body, ':after');
         }
     }
@@ -150,28 +161,28 @@ function getScreenSize() {
  */
 function removeIE9VideoShim(picture) {
     var video = picture.querySelector('video');
-    if(video) {
+    if (video) {
         var vsources = video.getElementsByTagName('source');
         while (vsources.length) {
-            picture.insertBefore(vsources[ 0 ], video);
+            picture.insertBefore(vsources[0], video);
         }
         video.parentNode.removeChild(video);
     }
 }
 
 function showImage(picture, screenSize) {
-    if(picture.image === undefined) {
+    if (picture.image === undefined) {
         picture.image = picture.querySelector('img');
     } else {
         picture.image.removeEventListener('load', stopPropagation);
     }
 
-    if(picture.image.type === undefined || picture.image.type !== screenMatrix[screenSize]) {
+    if (picture.image.type === undefined || picture.image.type !== screenMatrix[screenSize]) {
         var source = picture.querySelector('source.' + screenMatrix[screenSize]);
-        if(source) {
+        if (source) {
             loadImage(picture, source);
         } else {
-            if(screenSize < 4) {
+            if (screenSize < 4) {
                 showImage(picture, ++screenSize);
             } else {
                 throw 'no sources defined';
@@ -193,7 +204,7 @@ function loadImage(picture, source) {
 
 function setSource(picture, source) {
     var srcset = source.getAttribute('srcset');
-    if(srcset) {
+    if (srcset) {
         picture.image.src = getSrcFromSrcSet(srcset);
     } else {
         picture.image.src = source.src;
@@ -206,37 +217,37 @@ function getSrcFromSrcSet(srcset) {
 }
 
 function getCandidates(srcset) {
-    var candidates = srcset.split( /\s*,\s*/ );
+    var candidates = srcset.split(/\s*,\s*/);
     var formattedCandidates = [];
 
-    for ( var i = 0, len = candidates.length; i < len; i++ ) {
-        var candidate = candidates[ i ];
-        var candidateArr = candidate.split( /\s+/ );
-        var sizeDescriptor = candidateArr[ 1 ];
+    for (var i = 0, len = candidates.length; i < len; i++) {
+        var candidate = candidates[i];
+        var candidateArr = candidate.split(/\s+/);
+        var sizeDescriptor = candidateArr[1];
         var resolution;
-        if ( sizeDescriptor && ( sizeDescriptor.slice( -1 ) === "w" || sizeDescriptor.slice( -1 ) === "x" ) ) {
-            sizeDescriptor = sizeDescriptor.slice( 0, -1 );
+        if (sizeDescriptor && (sizeDescriptor.slice(-1) === "w" || sizeDescriptor.slice(-1) === "x")) {
+            sizeDescriptor = sizeDescriptor.slice(0, -1);
         }
 
-        resolution = sizeDescriptor ? parseFloat( sizeDescriptor, 10 ) : 1;
+        resolution = sizeDescriptor ? parseFloat(sizeDescriptor, 10) : 1;
 
         var formattedCandidate = {
-            url: candidateArr[ 0 ],
+            url: candidateArr[0],
             resolution: resolution
         };
-        formattedCandidates.push( formattedCandidate );
+        formattedCandidates.push(formattedCandidate);
     }
     return formattedCandidates;
 }
 
 function getBestCandidate(candidates) {
-    candidates.sort(function( a, b ) {
+    candidates.sort(function(a, b) {
         return b.resolution - a.resolution;
     });
     var candidate, bestCandidate = candidates[0];
-    for ( var l=1; l < candidates.length; l++ ) {
-        candidate = candidates[ l ];
-        if ( candidate.resolution >= Math.round(devicePixelRatio) && candidate.resolution <= bestCandidate.resolution) {
+    for (var l = 1; l < candidates.length; l++) {
+        candidate = candidates[l];
+        if (candidate.resolution >= Math.round(devicePixelRatio) && candidate.resolution <= bestCandidate.resolution) {
             bestCandidate = candidate;
         } else {
             break;
